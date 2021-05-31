@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t aruzin/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true aruzin/react-test npm test
+
+after_success:
+  - docker build -t aruzin/multi-client  ./client
+  - docker build -t aruzin/multi-nginx  ./nginx
+  - docker build -t aruzin/multi-server  ./server
+  - docker build -t aruzin/multi-worker  ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push aruzin/multi-client
+  - docker push aruzin/multi-nginx
+  - docker push aruzin/multi-server
+  - docker push aruzin/multi-worker
